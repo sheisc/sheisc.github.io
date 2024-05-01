@@ -1,181 +1,392 @@
-﻿
-<html><style type="text/css"></style><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title></title>
-</head><body data-gr-c-s-loaded="true">
+<html>
+<style type="text/css"></style>
 
-<div style="text-align:center">&nbsp;
-<table border="0" cellspacing="5">
-	<tbody>
-		<tr>
-			<td>
-				<img height="150" src="./me.jpg" width="115">				
-			</td>	
-			<td><b><font size="5">Changwei Zou (邹昌伟)</font></b>
-				<p>
-						    <a href="http://www.cse.unsw.edu.au/~corg/" >Compiler Research Group </a><br>
-							K17, 501-22<br>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title></title>
+	<style type="text/css">
+		.mycell {
+			width: 30;
+			height: 30;
+			text-align: center;
+			background-color: white
+		}
+	</style>
+	<script type="text/javascript">
+		var intervalId = "";
+		var rows = 0;
+		var cols = 0;
+		var cellName = "cell";
+		var cells = new Array(
+			1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
+			1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 
+			1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 
+			1, 0, 1, 0, 0, 1, 1, 1, 1, 1,
+			1, 0, 1, 1, 1, 0, 0, 0, 0, 0,
+			1, 0, 0, 0, 1, 0, 0, 1, 0, 0,
+			1, 0, 1, 1, 1, 0, 1, 0, 1, 0,
+			1, 0, 0, 0, 0, 0, 1, 1, 1, 0,
+			1, 1, 1, 1, 0, 0, 1, 0, 1, 0
+		);
+		var visited = new Array();
+		var stack = new Array();
+
+		function State(i, j, state) {
+			this.i = i;
+			this.j = j;
+			this.state = state;
+		}
+		State.east = 0;
+		State.south = 1;
+		State.west = 2;
+		State.north = 3;
+		State.finished = 4;
+
+		function isLegalLocation(i, j) {
+			return i >= 0 && i < rows && j >= 0 && j < cols;
+		}
+
+		function pushPerviousCell(i, j) {
+			if (isLegalLocation(i, j)
+				&& cells[i * cols + j] == 0 && !visited[i * cols + j]) {
+				var state = new State(i, j, State.east);
+				stack.push(state);
+				visited[i * cols + j] = true;
+			}
+		}
+
+
+		function isExitPosition(i, j) {
+			return (i == rows - 2) && (j == cols - 1) && (cells[i * cols + j] == 0);
+		}
+
+		function processStackTopCell() {
+			if (stack.length != 0) {
+				cur = stack[stack.length - 1];
+				var i = cur.i;
+				var j = cur.j;
+				var cell = document.getElementById(cellName + (i * cols + j));
+				if (isExitPosition(i, j)) {
+					cell.innerHTML = "&#128508;"	
+					//cell.style.background = "url(flag.gif) no-repeat center center";
+					clearInterval(intervalId);
+					mybutton.disabled = false;
+					return;
+				}
+				switch (cur.state) {
+					case State.east:
+						cur.state = State.south;
+						cell.innerHTML = "&#x2192;"						
+						//cell.style.background = "url(east.gif) no-repeat center center";
+						pushPerviousCell(i, j + 1);
+						break;
+					case State.south:
+						cur.state = State.west;
+						cell.innerHTML = "&#x2193;"	
+						//cell.style.background = "url(south.gif) no-repeat center center";
+						pushPerviousCell(i + 1, j);
+						break;
+					case State.west:
+						cur.state = State.north;
+						cell.innerHTML = "&#x2190;"
+						//cell.style.background = "url(west.gif) no-repeat center center";
+						pushPerviousCell(i, j - 1);
+						break;
+					case State.north:
+						cur.state = State.finished;
+						cell.innerHTML = "&#x2191;"
+						//cell.style.background = "url(north.gif) no-repeat center center";
+						pushPerviousCell(i - 1, j);
+						break;
+					case State.finished:
+					    cell.innerHTML = " "	
+						cell.style.background = "white";
+						stack.pop();
+						break;
+				}
+			}
+			else {
+				clearInterval(intervalId);
+				mybutton.disabled = false;
+			}
+		}
+
+
+		function starting() {
+			mybutton.disabled = true;
+			pushPerviousCell(1, 0, State.east);
+			intervalId = setInterval("processStackTopCell()", 200);
+		}
+
+		function initialMaze() {
+			for (var i = 0; i < rows; i++) {
+				for (var j = 0; j < cols; j++) {
+					visited[i * cols + j] = false;
+					var cell = document.getElementById(cellName + (i * cols + j));
+					cell.innerHTML = " "
+					if (cells[i * cols + j] == 1)
+						cell.style.background = "green";
+					else
+						cell.style.background = "white";
+					if (isExitPosition(i, j)) {
+						cell.innerHTML = "&#128508;"
+					}
+				}
+			}
+			
+		}
+
+		function pair(key, val) {
+			return " " + key + "=\"" + val + "\" ";
+		}
+
+		function createTable(r, c, tdname) {
+			cellName = tdname;
+			rows = r;
+			cols = c;
+			visited = new Array(rows * cols);
+			document.write("<table cellspacing=\"0\" cellpadding=\"0\" border=\"1\">");
+			for (var i = 0; i < rows; i++) {
+				document.write("<tr>");
+				for (var j = 0; j < cols; j++) {
+					document.write("<td");
+					document.write(pair("id", tdname + (i * cols + j)));
+					document.write(pair("class", "mycell"));
+					document.write(">");
+					document.write("&nbsp;");
+					document.write("</td>");
+				}
+				document.write("</tr>");
+			}
+			document.write("</table>");
+		}			
+	</script>
+</head>
+
+<body data-gr-c-s-loaded="true">
+
+	<div style="text-align:center">&nbsp;
+		<table border="0" cellspacing="5">
+			<tbody>
+				<tr>
+					<td>
+						<img height="150" src="./me.jpg" width="115">
+
+					</td>
+					<td><b>
+							<font size="5">Changwei Zou </font>
+						</b>
+						<p>
+							<a href="http://www.cse.unsw.edu.au/~corg/">Compiler Research Group </a><br>
+							501E, K17<br>
 							<a href="http://www.cse.unsw.edu.au/">School of Computer Science and Engineering</a><br>
-							<a href="http://www.unsw.edu.au/" >University of New South Wales</a><br>
+							<a href="http://www.unsw.edu.au/">University of New South Wales</a><br>
 							Sydney, NSW, 2052, AUSTRALIA
-				</p>
-				<p>
-						Email :	 changwei.zou AT unswalumni.com<br>
-				</p>												
-			</td>
-		</tr>
-	</tbody>
-</table>
-</div>
+						</p>
+						<p>
+							Email : changwei.zou AT unswalumni.com<br>
+						</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
-<h2 style="font-size: 10pt; border: 1px solid rgb(119, 119, 136); padding-top: 4px; padding-bottom: 2px; padding-left: 10px; background-color: rgb(221, 221, 221); font-family: Verdana, times, sans-serif; line-height: 20px;"><span style="font-family:arial,helvetica,sans-serif;">Research Interest </span></h2>
-<div style="text-align:center">&nbsp;
-<table border="0" cellspacing="5">
-	<tbody>
-		<tr>
+	<h2
+		style="font-size: 10pt; border: 1px solid rgb(119, 119, 136); padding-top: 4px; padding-bottom: 2px; padding-left: 10px; background-color: rgb(221, 221, 221); font-family: Verdana, times, sans-serif; line-height: 20px;">
+		<span style="font-family:arial,helvetica,sans-serif;">Research Interest </span></h2>
+	<div style="text-align:center">&nbsp;
+		<table border="0" cellspacing="5">
+			<tbody>
+				<tr>
+					<td>
+						<p>
+							I am interested in program analysis and software security.
+						</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+
+	<h2
+		style="font-size: 10pt; border: 1px solid rgb(119, 119, 136); padding-top: 4px; padding-bottom: 2px; padding-left: 10px; background-color: rgb(221, 221, 221); font-family: Verdana, times, sans-serif; line-height: 20px;">
+		<span style="font-family:arial,helvetica,sans-serif;">Education </span></h2>
+
+
+	<div style="text-align:center">&nbsp;
+		<table border="0" cellspacing="5">
+			<tbody>
+				<tr>
+					<td>
+						<p>
+							I am a postdoc supervised by
+							<a href="http://www.cse.unsw.edu.au/~jingling">
+								Prof. Jingling Xue </a> <br />
+							at School of Computer Science and Engineering, University of New South Wales.
+							<br />
+							<br />
+							I received my B.Eng degree in computer science and technology from Liaoning Technical
+							University <br />
+							and M.Eng degree in computer applications technology from Chinese Academy of Sciences
+							respectively. <br />
+							I earned my PhD degree in computer science from UNSW Sydney in 2021.
+						</p>
+					</td>
+					<td>
+
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+
+
+
+
+	<h2
+		style="font-size: 10pt; border: 1px solid rgb(119, 119, 136); padding-top: 4px; padding-bottom: 2px; padding-left: 10px; background-color: rgb(221, 221, 221); font-family: Verdana, times, sans-serif; line-height: 20px;">
+		<span style="font-family:arial,helvetica,sans-serif;">Publications </span></h2>
+	<div style="text-align:center">&nbsp;
+		<table border="0" cellspacing="5">
+			<tbody>
+				<tr>
+					<!--
 			<td>
-				<p>
-				I am interested in program analysis, software engineering and software security.
-				</p>										
-			</td>	
-		</tr>
-	</tbody>
-</table>
-</div>
-
-
-<h2 style="font-size: 10pt; border: 1px solid rgb(119, 119, 136); padding-top: 4px; padding-bottom: 2px; padding-left: 10px; background-color: rgb(221, 221, 221); font-family: Verdana, times, sans-serif; line-height: 20px;"><span style="font-family:arial,helvetica,sans-serif;">Education </span></h2>
-
-
-<div style="text-align:center">&nbsp;
-<table border="0" cellspacing="5">
-	<tbody>
-		<tr>
-			<td>
-				<p>
-				I am a postdoc supervised by
-				 <a href="http://www.cse.unsw.edu.au/~jingling">
-				Prof. Jingling Xue </a>  <br/>
-				at School of Computer Science and Engineering, University of New South Wales.
-				<br/>
-				<br/>
-				I received my B.Eng degree in computer science and technology from Liaoning Technical University <br/>
-				and M.Eng degree in computer applications technology from Chinese Academy of Sciences respectively.	<br/>
-				I earned my PhD degree in computer science at UNSW Sydney in 2021. 			
-				</p>									
-			</td>	
-			<td>
-				
-			</td>
-		</tr>
-	</tbody>
-</table>
-</div>
-
-
-
-
-
-<h2 style="font-size: 10pt; border: 1px solid rgb(119, 119, 136); padding-top: 4px; padding-bottom: 2px; padding-left: 10px; background-color: rgb(221, 221, 221); font-family: Verdana, times, sans-serif; line-height: 20px;"><span style="font-family:arial,helvetica,sans-serif;">Publications </span></h2>
-<div style="text-align:center">&nbsp;
-<table border="0" cellspacing="5">
-	<tbody>
-		<tr>
-			<!--
-			<td>
-				<img height="150" src="./book.jpg" width="115">				
+				<img height="150" src="./book.jpg" width="115">
 			</td>	
 			-->
 
-			<td>
-				<ol>
+					<td>
+						<ol>
+							<li>
+								<strong>Changwei Zou</strong>, Dongjie He, Yulei Sui and Jingling Xue. <br />
+								<strong>TIPS: Tracking Integer-Pointer Value Flows for C++ Member Function Pointers</strong>.<br />
+								2024 ACM SIGSOFT International Symposium on the Foundations of Software Engineering (<strong>FSE'24</strong>),
+								?? -- ??, 2024. <br /><br />
+							</li>
 
-				<li>
-				<strong>Changwei Zou</strong>, Xudong Wang, Yaoqing Gao and Jingling Xue. <br/>
-				<strong>Buddy Stacks: Protecting Return Addresses with Efficient Thread-Local Storage and Runtime Re-Randomization</strong>.<br/>
-				ACM Transactions on Software Engineering and Methodology (<strong>TOSEM</strong>), pp 1–37, 31(2), 2022.<br/>
-				<a href="https://github.com/sheisc/BuddyStack"> Code </a> <br/>
+							<li>
+								Dongjie He, Yujiang Gui, Wei Li, Yonggang Tao, <strong>Changwei Zou</strong>, Yulei Sui and Jingling Xue. <br />
+								<strong>A Container-Usage-Pattern-Based Context Debloating Approach for Object-Sensitive Pointer Analysis</strong>.<br />
+								2023 ACM SIGPLAN Conference on Object-Oriented Programming, Systems, Languages, and Applications (<strong>OOPSLA'23</strong>),
+								256:1 -- 256:30, 2023. <br /><br />
+							</li>
 
-				</li>	
-			
-				<li>
-				Xuezheng Xu, <strong>Changwei Zou</strong> and Jingling Xue. <br/>
-				<strong>Every Mutation Should Be Rewarded: Boosting Fault Localization with Mutated Predicates</strong>.<br/>
-				In 36th International Conference on Software Maintenance and Evolution (<strong>ICSME 2020</strong>), 196-207, Adelaide, Australia, 2020.				
-				</li>
+							<li>
+								<strong>Changwei Zou</strong>, Yaoqing Gao and Jingling Xue. <br />
+								<strong>Practical Software-Based Shadow Stacks on x86-64</strong>.<br />
+								ACM Transactions on Architecture and Code Optimization (<strong>TACO</strong>),
+								19(4):1544-3566, 2022. <br />
+								<a href="https://github.com/sheisc/FlashStack"> Code </a> <br /><br />
+							</li>
 
-				<br/>						
+							<li>
+								<strong>Changwei Zou</strong>, Xudong Wang, Yaoqing Gao and Jingling Xue. <br />
+								<strong>Buddy Stacks: Protecting Return Addresses with Efficient Thread-Local Storage
+									and Runtime Re-Randomization</strong>.<br />
+								ACM Transactions on Software Engineering and Methodology (<strong>TOSEM</strong>),
+								31(2):1-37, 2022.  <br />
+								<a href="https://github.com/sheisc/BuddyStack"> Code </a> <br /> <br />
 
-			
-				<li>
-				<strong>Changwei Zou</strong> and Jingling Xue. <br/>
-				<strong>Burn After Reading: 
-				A Shadow Stack with Microsecond-level Runtime Rerandomization for Protecting Return Addresses</strong>.<br/>
-				In Proceedings of the 42nd International Conference on Software Engineering (<strong>ICSE 2020</strong>), 258-270, Seoul, South Korea, 2020.	
-				<br/>
-				<a href="https://github.com/sheisc/BARRA/"> Code </a> <br/>			
-				</li>
+							</li>
 
-				<br/>	
+							<li>
+								Xuezheng Xu, <strong>Changwei Zou</strong> and Jingling Xue. <br />
+								<strong>Every Mutation Should Be Rewarded: Boosting Fault Localization with Mutated
+									Predicates</strong>.<br />
+								In 36th International Conference on Software Maintenance and Evolution (<strong>ICSME
+									2020</strong>), 196-207, Adelaide, Australia, 2020.
+							</li>
 
-				<li>						
-				<strong>Changwei Zou</strong>, Yulei Sui, Hua Yan and Jingling Xue. <br/>
-
-				<strong>TCD: 
-				Statically Detecting Type Confusion Errors in C++ Programs</strong>. <br/>
-				In Proceedings of the 30th IEEE International Symposium on Software Reliability Engineering (<strong>ISSRE 2019</strong>), 292-302, Berlin, Germany, 2019.				
-				<br/>
-				<a href="https://github.com/sheisc/TypeConfusionDetector"> Code </a> <br/>
-				</li>
-
-				<br/>
-
-				<li>
-				Hua Yan, Shiping Chen, Yulei Sui, Yueqian Zhang, <strong>Changwei Zou</strong> and Jingling Xue. <br/>
-				<strong>Per-Dereference Verification of Temporal Heap Safety via Adaptive Context-Sensitive Analysis</strong>. <br/>
-				In Proceedings of the 26th Static Analysis Symposium (<strong>SAS 2019</strong>), 48-72, Porto, Portugal, 2019.
-				
-				</li>	
-
-				<br/>
-					
-				<li>
-					<strong>Changwei Zou</strong>. <br/> <strong>The Dissection of C Compiler (in Chinese)</strong>. <br/>
-					Published by 
-					<a href="http://www.tup.tsinghua.edu.cn/bookscenter/book_06684201.html"> Tsinghua University Press</a>, 390 pages, ISBN 9787302426103, 2016.<br/>
-					<a href="https://github.com/sheisc/ucc162.3/"> GitHub</a> <br/>
-				</li>
-
-				</ol>			
+							<br />
 
 
+							<li>
+								<strong>Changwei Zou</strong> and Jingling Xue. <br />
+								<strong>Burn After Reading:
+									A Shadow Stack with Microsecond-level Runtime Rerandomization for Protecting Return
+									Addresses</strong>.<br />
+								In Proceedings of the 42nd International Conference on Software Engineering
+								(<strong>ICSE 2020</strong>), 258-270, Seoul, South Korea, 2020.
+								<br />
+								<a href="https://github.com/sheisc/BARRA/"> Code </a> <br />
+							</li>
 
-				
-			</td>		
-			<!--
+							<br />
+
+							<li>
+								<strong>Changwei Zou</strong>, Yulei Sui, Hua Yan and Jingling Xue. <br />
+
+								<strong>TCD:
+									Statically Detecting Type Confusion Errors in C++ Programs</strong>. <br />
+								In Proceedings of the 30th IEEE International Symposium on Software Reliability
+								Engineering (<strong>ISSRE 2019</strong>), 292-302, Berlin, Germany, 2019.
+								<br />
+								<a href="https://github.com/sheisc/TypeConfusionDetector"> Code </a> <br />
+							</li>
+
+							<br />
+
+							<li>
+								Hua Yan, Shiping Chen, Yulei Sui, Yueqian Zhang, <strong>Changwei Zou</strong> and
+								Jingling Xue. <br />
+								<strong>Per-Dereference Verification of Temporal Heap Safety via Adaptive
+									Context-Sensitive Analysis</strong>. <br />
+								In Proceedings of the 26th Static Analysis Symposium (<strong>SAS 2019</strong>), 48-72,
+								Porto, Portugal, 2019.
+
+							</li>
+
+							<br />
+
+							<li>
+								<strong>Changwei Zou</strong>. <br /> <strong>The Dissection of the C Compiler (in
+									Chinese)</strong>. <br />
+								Published by
+								<a href="http://www.tup.tsinghua.edu.cn/bookscenter/book_06684201.html"> Tsinghua
+									University Press</a>, 390 pages, ISBN 9787302426103, 2016.<br />
+								<a href="https://github.com/sheisc/ucc162.3/"> GitHub</a> <br />
+							</li>
+
+						</ol>
+
+
+
+
+					</td>
+					<!--
 			<td width="30%" height="30%">
 				<script type="text/javascript" id="clustrmaps" src="//cdn.clustrmaps.com/map_v2.js?d=9hSlQNd7MvINegw-N0I5XB7F3sHYhLd6GZUlXqTcNa4&cl=ffffff&w=a"></script>
 			</td>			
 			-->
-		</tr>
-	</tbody>
-</table>
-</div>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 
 
-<div style="text-align:center">
-<table border="0">
-	<tbody>
-		<tr>
-			<td width="800" height="800">
-					<!--			
-					<script type="text/javascript" id="clstr_globe" src="//cdn.clustrmaps.com/globe.js?d=9hSlQNd7MvINegw-N0I5XB7F3sHYhLd6GZUlXqTcNa4"></script>			
-					-->
-					<script type="text/javascript" id="clustrmaps" src="//cdn.clustrmaps.com/map_v2.js?d=9hSlQNd7MvINegw-N0I5XB7F3sHYhLd6GZUlXqTcNa4&cl=ffffff&w=a"></script>			
-					
-			</td>	
-		</tr>
-	</tbody>
-</table>
-</div>
+	<div align="left">
+		<input type="button" id="mybutton" value="Start 9024: DSA in C" onclick="initialMaze();starting();" />
+		<br />
+		<br />
+		<a href="https://github.com/sheisc/COMP9024"> COMP9024 </a>
+		<br />
+		<br />
+		<script type="text/javascript">
+			createTable(10, 10, "mycell");
+			initialMaze();																			
+		</script>
+		<br />
+		<br />
+	</div>	
 
 
-</body></html>
+
+
+</body>
+
+</html>
